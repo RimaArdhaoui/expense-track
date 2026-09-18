@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Ledger{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="wordmark" href="{{ url_for('app.dashboard') if g.user else url_for('app.login') }}">Ledger</a>
+    {% if g.user %}
+      <nav class="topbar-nav">
+        <span class="user">{{ g.user['username'] }}</span>
+        <a href="{{ url_for('app.logout') }}">Log out</a>
+      </nav>
+    {% endif %}
+  </header>
+
+  <main class="wrap">
+    {% for message in get_flashed_messages() %}
+      <p class="flash">{{ message }}</p>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

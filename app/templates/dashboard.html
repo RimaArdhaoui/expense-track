@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Ledger{% endblock %}
+{% block content %}
+  <section class="summary">
+    <span class="summary-label">Total</span>
+    <span class="summary-total">${{ '%.2f'|format(total) }}</span>
+  </section>
+
+  <section class="panel">
+    <h2>Add expense</h2>
+    <form method="post" action="{{ url_for('app.add_expense') }}" class="row-form">
+      <input type="number" step="0.01" min="0.01" name="amount" placeholder="Amount" required>
+      <input name="category" placeholder="Category" required>
+      <input name="note" placeholder="Note (optional)">
+      <button type="submit">Add</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <form method="get" action="{{ url_for('app.search_expenses') }}" class="row-form">
+      <input name="category" placeholder="Filter by category…" value="{{ search or '' }}">
+      <button type="submit">Filter</button>
+      {% if search %}<a class="clear" href="{{ url_for('app.dashboard') }}">Clear</a>{% endif %}
+    </form>
+  </section>
+
+  <table class="ledger">
+    <thead>
+      <tr><th>Date</th><th>Category</th><th>Note</th><th class="num">Amount</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for e in expenses %}
+      <tr>
+        <td>{{ e['date'] }}</td>
+        <td>{{ e['category'] }}</td>
+        <td>{{ e['note'] }}</td>
+        <td class="num">${{ '%.2f'|format(e['amount']) }}</td>
+        <td>
+          <form method="post" action="{{ url_for('app.delete_expense', expense_id=e['id']) }}">
+            <button type="submit" class="link-btn">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="empty">No expenses yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
