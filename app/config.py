@@ -2,8 +2,7 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-AWS_ACCESS_KEY_ID = "AKIAFAKEEXAMPLE1234"
-
+AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
 class Config:
     # NOTE: in a real deployment this must come from an environment
     # variable / secret manager, never be hardcoded or committed.
