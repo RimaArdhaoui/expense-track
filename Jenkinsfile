@@ -31,5 +31,18 @@ pipeline {
                 sh 'gitleaks detect --source=. --no-git --report-format=json --report-path=gitleaks.json --exit-code=1'
             }
         }
+        stage('SonarQube Analysis') {
+    agent {
+        docker {
+            image 'sonarsource/sonar-scanner-cli:latest'
+            args '--network devsecops-net'
+        }
+    }
+    steps {
+        withSonarQubeEnv('sonarqube') {
+            sh 'sonar-scanner'
+        }
+    }
+}
     }
 }
