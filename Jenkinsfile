@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        SONARQUBE_ENV = 'sonarqube'
+    }
+
     stages {
 
         stage('Checkout') {
@@ -30,19 +34,33 @@ pipeline {
             steps {
                 sh 'gitleaks detect --source=. --no-git --report-format=json --report-path=gitleaks.json --exit-code=1'
             }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'gitleaks.json', allowEmptyArchive: true
+                }
+            }
         }
+
         stage('SonarQube Analysis') {
-    agent {
-        docker {
-            image 'sonarsource/sonar-scanner-cli:latest'
-            args '--network devsecops-net'
+            agent {
+                docker {
+                    image 'sonarsource/sonar-scanner-cli:latest'
+                    args '--network devsecops-net'
+                }
+            }
+            steps {
+                withSonarQubeEnv("${SONARQUBE_ENV}") {
+                    sh 'sonar-scanner'
+                }
+            }
         }
-    }
-    steps {
-        withSonarQubeEnv('sonarqube') {
-            sh 'sonar-scanner'
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
         }
-    }
-}
     }
 }

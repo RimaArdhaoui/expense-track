@@ -154,30 +154,16 @@ def delete_expense(expense_id):
 @bp.route("/expenses/search")
 @login_required
 def search_expenses():
-    """Filter expenses by category.
-
-    NOTE (security-lab demo): this query is built with plain string
-    formatting instead of a parameterized query, which is exactly the
-    kind of SQL-injection-prone pattern a quick "vibe coded" feature
-    tends to ship with. Left in intentionally as a real, own-code
-    example for your SAST tool (e.g. Semgrep/Bandit) to flag during
-    the Development-phase lab. Fix it (parameterize the query) as
-    part of demonstrating the tool's value, and mention the fix in
-    your report.
-    """
     category = request.args.get("category", "")
     db = get_db()
-    query = (
-        "SELECT * FROM expenses WHERE user_id = %s "
-        "AND category LIKE '%%%s%%' ORDER BY date DESC"
-        % (g.user["id"], category)
-    )
-    expenses = db.execute(query).fetchall()
+    expenses = db.execute(
+        "SELECT * FROM expenses WHERE user_id = ? AND category LIKE ? ORDER BY date DESC",
+        (g.user["id"], f"%{category}%"),
+    ).fetchall()
     total = sum(row["amount"] for row in expenses)
     return render_template(
         "dashboard.html", expenses=expenses, total=total, search=category
     )
-
 
 # ---------- simple JSON API ----------
 
