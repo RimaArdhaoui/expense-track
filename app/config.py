@@ -2,8 +2,6 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-GITHUB_TOKEN = "ghp_9f8A2kLpQ7rT4vXcN1mZbY6wJdS3eR0uHiOg"
-AWS_ACCESS_KEY_ID = "AKIAZP7HXJQR9K2LMNOP"
 
 class Config:
     # NOTE: in a real deployment this must come from an environment
