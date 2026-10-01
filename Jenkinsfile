@@ -13,16 +13,11 @@ pipeline {
             }
         }
 
-        stage('Install & Test') {
-            agent {
-                docker { image 'python:3.12-slim' }
-            }
+        stage('Clean') {
             steps {
                 sh '''
-                    python -m venv .venv
-                    . .venv/bin/activate
-                    pip install -r requirements.txt
-                    python -m pytest -q
+                    rm -rf .venv __pycache__ app/__pycache__ tests/__pycache__ \
+                        dist build *.egg-info gitleaks.json trivy-fs-report.json
                 '''
             }
         }
@@ -38,6 +33,37 @@ pipeline {
                 always {
                     archiveArtifacts artifacts: 'gitleaks.json', allowEmptyArchive: true
                 }
+            }
+        }
+
+        stage('Filesystem Scan - Trivy') {
+            agent {
+                docker { image 'aquasec/trivy:latest'; args '--entrypoint=' }
+            }
+            steps {
+                sh '''
+                    trivy fs --severity HIGH,CRITICAL --exit-code 1 \
+                        --format json -o trivy-fs-report.json .
+                '''
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'trivy-fs-report.json', allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('Install & Test') {
+            agent {
+                docker { image 'python:3.12-slim' }
+            }
+            steps {
+                sh '''
+                    python -m venv .venv
+                    . .venv/bin/activate
+                    pip install -r requirements.txt
+                    python -m pytest -q
+                '''
             }
         }
 
