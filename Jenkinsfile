@@ -106,5 +106,13 @@ pipeline {
                 '''
             }
         }
+        stage('Verify kind Connectivity') {
+    steps {
+        withCredentials([file(credentialsId: 'kubeconfig-kind', variable: 'KUBECONFIG_FILE')]) {
+            sh 'kubectl --kubeconfig=$KUBECONFIG_FILE get nodes'
+        }
+    }
+}
+
     }
 }
