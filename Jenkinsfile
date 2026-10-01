@@ -36,22 +36,25 @@ pipeline {
             }
         }
 
-        stage('Filesystem Scan - Trivy') {
-            agent {
-                docker { image 'aquasec/trivy:latest'; args '--entrypoint=' }
-            }
-            steps {
-                sh '''
-                    trivy fs --severity HIGH,CRITICAL --exit-code 1 \
-                        --format json -o trivy-fs-report.json .
-                '''
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'trivy-fs-report.json', allowEmptyArchive: true
-                }
-            }
+  stage('Filesystem Scan - Trivy') {
+    agent {
+        docker {
+            image 'aquasec/trivy:latest'
+            args '--entrypoint= -v trivy-cache:/root/.cache/'
         }
+    }
+    steps {
+        sh '''
+            trivy fs --severity HIGH,CRITICAL --exit-code 1 --timeout 15m \
+                --format json -o trivy-fs-report.json .
+        '''
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'trivy-fs-report.json', allowEmptyArchive: true
+        }
+    }
+}
 
         stage('Install & Test') {
             agent {
