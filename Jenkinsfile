@@ -42,6 +42,8 @@ stage('Dependency Scan - pip-audit') {
     }
     steps {
         sh '''
+            python -m venv .venv-audit
+            . .venv-audit/bin/activate
             pip install --quiet pip-audit
             pip-audit -r requirements.txt --format json -o pip-audit-report.json
         '''
