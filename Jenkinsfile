@@ -36,26 +36,6 @@ pipeline {
             }
         }
 
-/* TODO: re-enable once the pip permission issue is resolved
-stage('Dependency Scan - pip-audit') {
-    agent {
-        docker { image 'python:3.12-slim' }
-    }
-    steps {
-        sh '''
-            python -m venv .venv-audit
-            . .venv-audit/bin/activate
-            pip install --quiet pip-audit
-            pip-audit -r requirements.txt --format json -o pip-audit-report.json
-        '''
-    }
-    post {
-        always {
-            archiveArtifacts artifacts: 'pip-audit-report.json', allowEmptyArchive: true
-        }
-    }
-}
-*/
         stage('Install & Test') {
             agent {
                 docker { image 'python:3.12-slim' }
@@ -91,35 +71,40 @@ stage('Dependency Scan - pip-audit') {
                 }
             }
         }
-        stage('Build Artifact') {
-    agent {
-        docker { image 'python:3.12-slim' }
-    }
-    steps {
-        sh '''
-            pip install --quiet build
-            python -m build
-        '''
-    }
-}
 
-stage('Publish to Nexus') {
-    agent {
-        docker {
-            image 'python:3.12-slim'
-            args '--network devsecops-net'
+        stage('Build Artifact') {
+            agent {
+                docker { image 'python:3.12-slim' }
+            }
+            steps {
+                sh '''
+                    python -m venv .venv-build
+                    . .venv-build/bin/activate
+                    pip install --quiet build
+                    python -m build
+                '''
+            }
         }
-    }
-    environment {
-        NEXUS_CREDS = credentials('nexus-creds')
-    }
-    steps {
-        sh '''
-            pip install --quiet twine
-            twine upload --repository-url http://nexus:8081/repository/pypi-hosted/ \
-                -u "$NEXUS_CREDS_USR" -p "$NEXUS_CREDS_PSW" dist/*
-        '''
-    }
-}
+
+        stage('Publish to Nexus') {
+            agent {
+                docker {
+                    image 'python:3.12-slim'
+                    args '--network devsecops-net'
+                }
+            }
+            environment {
+                NEXUS_CREDS = credentials('nexus-creds')
+            }
+            steps {
+                sh '''
+                    python -m venv .venv-publish
+                    . .venv-publish/bin/activate
+                    pip install --quiet twine
+                    twine upload --repository-url http://nexus:8081/repository/pypi-hosted/ \
+                        -u "$NEXUS_CREDS_USR" -p "$NEXUS_CREDS_PSW" dist/*
+                '''
+            }
+        }
     }
 }
