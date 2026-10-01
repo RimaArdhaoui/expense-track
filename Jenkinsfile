@@ -88,5 +88,35 @@ pipeline {
                 }
             }
         }
+        stage('Build Artifact') {
+    agent {
+        docker { image 'python:3.12-slim' }
+    }
+    steps {
+        sh '''
+            pip install --quiet build
+            python -m build
+        '''
+    }
+}
+
+stage('Publish to Nexus') {
+    agent {
+        docker {
+            image 'python:3.12-slim'
+            args '--network devsecops-net'
+        }
+    }
+    environment {
+        NEXUS_CREDS = credentials('nexus-creds')
+    }
+    steps {
+        sh '''
+            pip install --quiet twine
+            twine upload --repository-url http://nexus:8081/repository/pypi-hosted/ \
+                -u "$NEXUS_CREDS_USR" -p "$NEXUS_CREDS_PSW" dist/*
+        '''
+    }
+}
     }
 }
