@@ -36,22 +36,19 @@ pipeline {
             }
         }
 
-  stage('Filesystem Scan - Trivy') {
+stage('Dependency Scan - pip-audit') {
     agent {
-        docker {
-            image 'aquasec/trivy:latest'
-            args '--entrypoint= -v trivy-cache:/root/.cache/'
-        }
+        docker { image 'python:3.12-slim' }
     }
     steps {
         sh '''
-            trivy fs --severity HIGH,CRITICAL --exit-code 1 --timeout 15m \
-                --format json -o trivy-fs-report.json .
+            pip install --quiet pip-audit
+            pip-audit -r requirements.txt --format json -o pip-audit-report.json
         '''
     }
     post {
         always {
-            archiveArtifacts artifacts: 'trivy-fs-report.json', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'pip-audit-report.json', allowEmptyArchive: true
         }
     }
 }
